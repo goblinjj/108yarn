@@ -10,6 +10,9 @@ export const useSound = () => {
     // Mobile Audio Unlock: Play all sounds silently on first interaction
     const unlock = () => {
       Object.values(sounds.current).forEach(audio => {
+        // Skip 'click' sound as it's triggered by direct interaction and shouldn't be muted/paused by unlock logic
+        if (audio === sounds.current.click) return;
+
         audio.muted = true;
         try {
           const playPromise = audio.play();
