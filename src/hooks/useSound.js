@@ -1,17 +1,31 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 export const useSound = () => {
-  const sounds = useRef({
-    click: new Audio('/sounds/click.mp3'),
-    complete: new Audio('/sounds/complete.mp3'),
-  });
+  const sounds = useRef(null);
+
+  // Initialize sounds lazily once
+  if (!sounds.current) {
+    sounds.current = {
+      click: new Audio('/sounds/click.mp3'),
+      complete: new Audio('/sounds/complete.mp3'),
+    };
+  }
 
   useEffect(() => {
+    // Preload sounds
+    Object.values(sounds.current).forEach(audio => {
+      audio.load();
+    });
+
     // Mobile Audio Unlock: Play all sounds silently on first interaction
     const unlock = () => {
       Object.values(sounds.current).forEach(audio => {
-        // Skip 'click' sound as it's triggered by direct interaction and shouldn't be muted/paused by unlock logic
-        if (audio === sounds.current.click) return;
+        // Skip 'click' sound in unlock to avoid cutting off the real click sound
+        // But ensure it's loaded
+        if (audio === sounds.current.click) {
+          audio.load();
+          return;
+        }
 
         audio.muted = true;
         try {
@@ -22,16 +36,15 @@ export const useSound = () => {
               audio.currentTime = 0;
               audio.muted = false;
             }).catch(e => {
-              // Ignore errors during unlock (e.g. if user interaction wasn't sufficient yet)
+              // Ignore errors
             });
           } else {
-            // Fallback for older browsers that don't return a promise
             audio.pause();
             audio.currentTime = 0;
             audio.muted = false;
           }
         } catch (e) {
-          // Prevent crash if audio API fails
+          // Ignore errors
         }
       });
       document.removeEventListener('touchstart', unlock);
