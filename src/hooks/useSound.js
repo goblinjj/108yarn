@@ -12,13 +12,25 @@ export const useSound = () => {
     const unlock = () => {
       Object.values(sounds.current).forEach(audio => {
         audio.muted = true;
-        audio.play().then(() => {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.muted = false;
-        }).catch(e => {
-          // Ignore errors during unlock
-        });
+        try {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              audio.pause();
+              audio.currentTime = 0;
+              audio.muted = false;
+            }).catch(e => {
+              // Ignore errors during unlock (e.g. if user interaction wasn't sufficient yet)
+            });
+          } else {
+            // Fallback for older browsers that don't return a promise
+            audio.pause();
+            audio.currentTime = 0;
+            audio.muted = false;
+          }
+        } catch (e) {
+          // Prevent crash if audio API fails
+        }
       });
       document.removeEventListener('touchstart', unlock);
       document.removeEventListener('click', unlock);
