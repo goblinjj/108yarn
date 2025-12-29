@@ -67,17 +67,66 @@ export function generateCombinations() {
     return true;
   });
 
-  // Shuffle deterministically
+  // Theme Scoring for "Field" (田野)
+  // Prioritize: Green, Brown, Yellows, Blue, White
+  // Penalize: Clashing high contrast without nature context
+  const scoreCombination = (combo) => {
+    let score = 0;
+    const hasGreen = combo.includes(5);
+    const hasBrown = combo.includes(3);
+    const hasYellow = combo.includes(0);
+    const hasDarkYellow = combo.includes(4);
+    const hasBlue = combo.includes(1);
+    const hasWhite = combo.includes(6);
+    const hasRed = combo.includes(2);
+
+    // Bonus for nature combinations
+    if (hasGreen && hasBrown) score += 2; // Earth & Grass
+    if (hasYellow && hasGreen) score += 1; // Flowers/Crops
+    if (hasDarkYellow && hasGreen) score += 1;
+    if (hasBlue && hasWhite) score += 1; // Sky & Clouds
+    if (hasBrown && (hasYellow || hasDarkYellow)) score += 2; // Harvest/Soil
+
+    // Penalize "unnatural" clashes or too busy
+    if (hasRed && hasGreen) score -= 1; // Can be harsh
+    if (hasRed && hasBlue) score -= 1;
+    
+    // Slight penalty for Red in general as it's an accent in fields
+    if (hasRed) score -= 0.5;
+
+    return score;
+  };
+
+  // Sort by score descending, then shuffle within same score
+  // To do this deterministically with shuffle, we can group by score
+  const scoredPermutations = validPermutations.map(p => ({
+    p,
+    score: scoreCombination(p)
+  }));
+
+  scoredPermutations.sort((a, b) => b.score - a.score);
+
+  // Shuffle deterministically within groups of same score to avoid patterns
   let seed = 42;
   const random = () => {
     const x = Math.sin(seed++) * 10000;
     return x - Math.floor(x);
   };
 
+  // We need to shuffle items that have the same score
+  // But simple sort is stable or not guaranteed. Let's just shuffle the whole list first?
+  // No, we want high scores first.
+  // Let's shuffle the whole valid list first, then sort. 
+  // Since sort is stable in modern JS, the random order within ties will be preserved.
+  
+  // 1. Shuffle validPermutations first
   for (let i = validPermutations.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [validPermutations[i], validPermutations[j]] = [validPermutations[j], validPermutations[i]];
   }
+
+  // 2. Sort by score
+  validPermutations.sort((a, b) => scoreCombination(b) - scoreCombination(a));
 
   // Prepend the preserved first combination
   const finalPermutations = [firstCombinationIndices, ...validPermutations];
