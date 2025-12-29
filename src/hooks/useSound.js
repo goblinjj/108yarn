@@ -8,19 +8,37 @@ export const useSound = () => {
   });
 
   useEffect(() => {
-    // Preload sounds
-    Object.values(sounds.current).forEach(audio => {
-      audio.load();
-    });
+    // Mobile Audio Unlock: Play all sounds silently on first interaction
+    const unlock = () => {
+      Object.values(sounds.current).forEach(audio => {
+        audio.muted = true;
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+        }).catch(e => {
+          // Ignore errors during unlock
+        });
+      });
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('click', unlock);
+    };
+
+    document.addEventListener('touchstart', unlock);
+    document.addEventListener('click', unlock);
+
+    return () => {
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('click', unlock);
+    };
   }, []);
 
   const play = useCallback((type) => {
-    const original = sounds.current[type];
-    if (original) {
-      // Clone the node to allow overlapping sounds (important for rapid scrolling/clicking)
-      const clone = original.cloneNode();
-      clone.volume = original.volume;
-      clone.play().catch(e => {
+    const audio = sounds.current[type];
+    if (audio) {
+      // Reset to start to allow rapid replay (no overlap, but better mobile compatibility)
+      audio.currentTime = 0;
+      audio.play().catch(e => {
         // Ignore auto-play errors or interruptions
       });
     }
