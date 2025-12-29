@@ -117,9 +117,20 @@ function App() {
                 <motion.div 
                   layout
                   initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    y: isPending ? [0, -2, 0, 2, 0] : 0
+                  }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ 
+                    default: { duration: 0.4 },
+                    y: isPending ? {
+                      duration: 0.15,
+                      repeat: Infinity,
+                      ease: "linear"
+                    } : { duration: 0.2 }
+                  }}
                   key={combo.id}
                   onClick={() => handleCardClick(combo.id)}
                   className={`
