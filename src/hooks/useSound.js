@@ -3,7 +3,6 @@ import { useEffect, useRef, useCallback } from 'react';
 export const useSound = () => {
   const sounds = useRef({
     click: new Audio('/sounds/click.mp3'),
-    scroll: new Audio('/sounds/scroll.mp3'),
     complete: new Audio('/sounds/complete.mp3'),
   });
 

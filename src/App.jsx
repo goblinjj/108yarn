@@ -28,17 +28,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let interval;
-    if (pending.length > 0) {
-      // Play ticking sound while any card is loading
-      interval = setInterval(() => {
-        play('scroll');
-      }, 150); // Play every 150ms for a mechanical ticking effect
-    }
-    return () => clearInterval(interval);
-  }, [pending, play]);
-
-  useEffect(() => {
     localStorage.setItem('completedCombinations', JSON.stringify(completed));
     
     // Delay the update of sortedCompleted to allow animation/visual feedback
