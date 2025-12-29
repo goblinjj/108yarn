@@ -36,7 +36,11 @@ function App() {
       setSortedCompleted(prev => {
         // Play sound only if we added a new item (length increased)
         if (completed.length > prev.length) {
-          play('complete');
+          if (completed.length === 108) {
+            play('final');
+          } else {
+            play('complete');
+          }
         }
         return completed;
       });

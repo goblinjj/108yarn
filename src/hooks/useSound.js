@@ -26,6 +26,7 @@ export const useSound = () => {
 
     loadSound('/sounds/click.mp3', 'click');
     loadSound('/sounds/complete.mp3', 'complete');
+    loadSound('/sounds/final.mp3', 'final');
 
     return () => {
       if (ctx.state !== 'closed') {
