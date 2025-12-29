@@ -6,7 +6,8 @@ import { useSound } from './hooks/useSound';
 
 function App() {
   const [combinations, setCombinations] = useState([]);
-  const { play } = useSound();
+  const { play, unlock } = useSound();
+  const [hasStarted, setHasStarted] = useState(false);
   const [completed, setCompleted] = useState(() => {
     const saved = localStorage.getItem('completedCombinations');
     return saved ? JSON.parse(saved) : [];
@@ -77,6 +78,26 @@ function App() {
     if (aCompleted === bCompleted) return 0;
     return aCompleted ? 1 : -1;
   });
+
+  if (!hasStarted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">毛线颜色组合</h1>
+          <p className="text-gray-600 mb-8"> </p>
+          <button 
+            onClick={() => {
+              unlock();
+              setHasStarted(true);
+            }}
+            className="px-8 py-4 bg-blue-600 text-white text-xl font-medium rounded-full shadow-lg hover:bg-blue-700 transition-all transform hover:scale-105 active:scale-95"
+          >
+            进入应用
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">

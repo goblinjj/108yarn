@@ -16,49 +16,31 @@ export const useSound = () => {
     Object.values(sounds.current).forEach(audio => {
       audio.load();
     });
+  }, []);
 
-    // Mobile Audio Unlock: Play all sounds silently on first interaction
-    const unlock = () => {
-      Object.values(sounds.current).forEach(audio => {
-        // Skip 'click' sound in unlock to avoid cutting off the real click sound
-        // But ensure it's loaded
-        if (audio === sounds.current.click) {
-          audio.load();
-          return;
-        }
-
-        audio.muted = true;
-        try {
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.then(() => {
-              audio.pause();
-              audio.currentTime = 0;
-            }).catch(e => {
-              // Ignore errors
-            }).finally(() => {
-              audio.muted = false;
-            });
-          } else {
+  const unlock = useCallback(() => {
+    Object.values(sounds.current).forEach(audio => {
+      audio.muted = true;
+      try {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
             audio.pause();
             audio.currentTime = 0;
+          }).catch(e => {
+            // Ignore errors
+          }).finally(() => {
             audio.muted = false;
-          }
-        } catch (e) {
+          });
+        } else {
+          audio.pause();
+          audio.currentTime = 0;
           audio.muted = false;
         }
-      });
-      document.removeEventListener('touchstart', unlock);
-      document.removeEventListener('click', unlock);
-    };
-
-    document.addEventListener('touchstart', unlock);
-    document.addEventListener('click', unlock);
-
-    return () => {
-      document.removeEventListener('touchstart', unlock);
-      document.removeEventListener('click', unlock);
-    };
+      } catch (e) {
+        audio.muted = false;
+      }
+    });
   }, []);
 
   const play = useCallback((type) => {
@@ -72,5 +54,5 @@ export const useSound = () => {
     }
   }, []);
 
-  return { play };
+  return { play, unlock };
 };
