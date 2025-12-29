@@ -1,56 +1,69 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 export const useSound = () => {
-  const sounds = useRef(null);
-
-  // Initialize sounds lazily once
-  if (!sounds.current) {
-    sounds.current = {
-      click: new Audio('/sounds/click.mp3'),
-      complete: new Audio('/sounds/complete.mp3'),
-    };
-  }
+  const audioContextRef = useRef(null);
+  const buffersRef = useRef({});
 
   useEffect(() => {
-    // Preload sounds
-    Object.values(sounds.current).forEach(audio => {
-      audio.load();
-    });
+    // Initialize AudioContext
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    
+    const ctx = new AudioContext();
+    audioContextRef.current = ctx;
+
+    // Load sounds
+    const loadSound = async (url, name) => {
+      try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        buffersRef.current[name] = audioBuffer;
+      } catch (e) {
+        console.error(`Failed to load sound: ${name}`, e);
+      }
+    };
+
+    loadSound('/sounds/click.mp3', 'click');
+    loadSound('/sounds/complete.mp3', 'complete');
+
+    return () => {
+      if (ctx.state !== 'closed') {
+        ctx.close();
+      }
+    };
   }, []);
 
   const unlock = useCallback(() => {
-    Object.values(sounds.current).forEach(audio => {
-      audio.muted = true;
-      try {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-          }).catch(e => {
-            // Ignore errors
-          }).finally(() => {
-            audio.muted = false;
-          });
-        } else {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.muted = false;
-        }
-      } catch (e) {
-        audio.muted = false;
-      }
-    });
+    const ctx = audioContextRef.current;
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume();
+    }
+    
+    // Play a silent buffer to warm up the engine (iOS/Android trick)
+    if (ctx) {
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    }
   }, []);
 
   const play = useCallback((type) => {
-    const audio = sounds.current[type];
-    if (audio) {
-      // Reset to start to allow rapid replay (no overlap, but better mobile compatibility)
-      audio.currentTime = 0;
-      audio.play().catch(e => {
-        // Ignore auto-play errors or interruptions
-      });
+    const ctx = audioContextRef.current;
+    const buffer = buffersRef.current[type];
+    
+    if (ctx && buffer) {
+      // Ensure context is running (sometimes it suspends)
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
     }
   }, []);
 
