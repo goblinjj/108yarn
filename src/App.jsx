@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { generateCombinations } from './utils/colors';
 import { Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSound } from './hooks/useSound';
 
 function App() {
   const [combinations, setCombinations] = useState([]);
+  const { play } = useSound();
   const [completed, setCompleted] = useState(() => {
     const saved = localStorage.getItem('completedCombinations');
     return saved ? JSON.parse(saved) : [];
@@ -26,29 +28,49 @@ function App() {
   }, []);
 
   useEffect(() => {
+    let interval;
+    if (pending.length > 0) {
+      // Play ticking sound while any card is loading
+      interval = setInterval(() => {
+        play('scroll');
+      }, 150); // Play every 150ms for a mechanical ticking effect
+    }
+    return () => clearInterval(interval);
+  }, [pending, play]);
+
+  useEffect(() => {
     localStorage.setItem('completedCombinations', JSON.stringify(completed));
     
     // Delay the update of sortedCompleted to allow animation/visual feedback
     const timer = setTimeout(() => {
-      setSortedCompleted(completed);
+      setSortedCompleted(prev => {
+        // Play sound only if we added a new item (length increased)
+        if (completed.length > prev.length) {
+          play('complete');
+        }
+        return completed;
+      });
     }, 600); // 600ms delay
 
     return () => clearTimeout(timer);
-  }, [completed]);
+  }, [completed, play]);
 
   const handleCardClick = (id) => {
     if (completed.includes(id)) {
+      play('click');
       setCompleted(prev => prev.filter(c => c !== id));
       return;
     }
 
     if (pending.includes(id)) {
+      play('click');
       clearTimeout(timers.current[id]);
       delete timers.current[id];
       setPending(prev => prev.filter(i => i !== id));
       return;
     }
 
+    play('click');
     setPending(prev => [...prev, id]);
     timers.current[id] = setTimeout(() => {
       setCompleted(prev => [...prev, id]);
