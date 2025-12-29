@@ -108,10 +108,10 @@ function App() {
       <div className="max-w-6xl mx-auto">
         <header className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">毛线颜色组合 (108种)</h1>
-          <div className="w-full bg-gray-200 rounded-full h-4 mb-2 max-w-md mx-auto">
+          <div className="w-full bg-gray-200 rounded-full h-4 mb-2 max-w-md mx-auto overflow-hidden transform-gpu">
             <div 
-              className="bg-blue-600 h-4 rounded-full transition-all duration-500" 
-              style={{ width: `${progress}%` }}
+              className="bg-blue-600 h-4 rounded-full transition-all duration-500 ease-out will-change-[width]" 
+              style={{ width: `${progress}%`, transform: 'translateZ(0)' }}
             ></div>
           </div>
           <p className="text-gray-600">
