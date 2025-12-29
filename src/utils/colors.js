@@ -3,7 +3,7 @@ export const COLORS = [
   { id: 'blue', name: '蓝', hex: '#3B82F6' }, // Tailwind blue-500
   { id: 'red', name: '红', hex: '#EF4444' }, // Tailwind red-500
   { id: 'brown', name: '棕', hex: '#8B4513' },
-  { id: 'darkYellow', name: '深黄', hex: '#B45309' }, // Darker amber
+  { id: 'darkYellow', name: '深黄', hex: '#F59E0B' }, // Tailwind amber-500
   { id: 'green', name: '绿', hex: '#22C55E' }, // Tailwind green-500
 ];
 
