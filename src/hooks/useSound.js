@@ -34,9 +34,10 @@ export const useSound = () => {
             playPromise.then(() => {
               audio.pause();
               audio.currentTime = 0;
-              audio.muted = false;
             }).catch(e => {
               // Ignore errors
+            }).finally(() => {
+              audio.muted = false;
             });
           } else {
             audio.pause();
@@ -44,7 +45,7 @@ export const useSound = () => {
             audio.muted = false;
           }
         } catch (e) {
-          // Ignore errors
+          audio.muted = false;
         }
       });
       document.removeEventListener('touchstart', unlock);
