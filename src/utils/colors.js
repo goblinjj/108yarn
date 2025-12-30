@@ -157,11 +157,37 @@ export function generateCombinations() {
     [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
   }
 
-  // Sort by new score
-  candidates.sort((a, b) => scoreCombinationNew(b) - scoreCombinationNew(a));
+  // Categorize candidates to ensure balance
+  const onlyWhite = [];
+  const onlyYellow = [];
+  const both = [];
 
-  // Take the needed amount (108 - 27 = 81)
-  const newPart = candidates.slice(0, 81);
+  candidates.forEach(p => {
+    const hasW = p.includes(WHITE);
+    const hasY = p.includes(YELLOW);
+    if (hasW && hasY) both.push(p);
+    else if (hasW) onlyWhite.push(p);
+    else if (hasY) onlyYellow.push(p);
+  });
+
+  // Sort each group by score
+  onlyWhite.sort((a, b) => scoreCombinationNew(b) - scoreCombinationNew(a));
+  onlyYellow.sort((a, b) => scoreCombinationNew(b) - scoreCombinationNew(a));
+  both.sort((a, b) => scoreCombinationNew(b) - scoreCombinationNew(a));
+
+  // Interleave to get balanced mix (approx 27 of each for the 81 slots)
+  const newPart = [];
+  let i = 0;
+  while (newPart.length < 81) {
+    let added = false;
+    // Cycle through: Only White -> Only Yellow -> Both
+    if (i < onlyWhite.length) { newPart.push(onlyWhite[i]); added = true; }
+    if (newPart.length < 81 && i < onlyYellow.length) { newPart.push(onlyYellow[i]); added = true; }
+    if (newPart.length < 81 && i < both.length) { newPart.push(both[i]); added = true; }
+    
+    if (!added) break; // Should not happen given the pool size
+    i++;
+  }
 
   const finalPermutations = [...fixedPart, ...newPart];
 
