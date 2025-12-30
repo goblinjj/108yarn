@@ -49,6 +49,26 @@ function App() {
     return () => clearTimeout(timer);
   }, [completed, play]);
 
+  useEffect(() => {
+    let interval;
+    if (pending.length > 0) {
+      const vibrate = () => {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(100);
+        }
+      };
+      vibrate();
+      interval = setInterval(vibrate, 150);
+    } else {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(0);
+      }
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [pending]);
+
   const handleCardClick = (id) => {
     if (completed.includes(id)) {
       play('click');
