@@ -132,6 +132,11 @@ export function generateCombinations() {
         return -1000; // Discard
     }
 
+    // Rule 2: Not too large span / Not too eye-catching
+    if (hasRed) score -= 2; // Red is very eye-catching
+    if (hasRed && hasGreen) score -= 3;
+    if (hasRed && hasBlue) score -= 3;
+    
     // Reward harmonious/soft combinations
     if (hasWhite) score += 2;
     if (hasYellow) score += 1;
@@ -141,16 +146,7 @@ export function generateCombinations() {
     if (hasGreen && hasYellow) score += 1;
     if (hasBlue && hasWhite) score += 1;
     
-    // Red handling: Significantly suppress red to keep it at lower proportion
-    if (hasRed) {
-      // Strong penalty for any red - red should be rare
-      score -= 1.5;
-      
-      // Additional penalties for specific red combinations
-      if (hasRed && hasGreen) score -= 4;  // Complementary colors, too sharp
-      if (hasRed && hasBlue) score -= 3.5; // High contrast
-      if (hasBlue && hasRed && hasYellow) score -= 3; // Too vibrant
-    }
+    if (hasBlue && hasRed && hasYellow) score -= 2;
 
     return score;
   };
