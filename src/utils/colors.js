@@ -197,12 +197,17 @@ export function generateCombinations() {
 
   while (newPart.length < 81) {
     // Inject Red occasionally in range 62-108 (indices 34-80)
-    // Every ~6th item
-    if (newPart.length >= 34 && (newPart.length - 34) % 6 === 0 && redIdx < redInjectionPool.length) {
-        const p = redInjectionPool[redIdx++];
-        if (tryAdd(p)) {
-            continue;
-        }
+    if (newPart.length >= 34) {
+         // Determine how many reds we should have injected by now
+         // We want roughly one red every 6 items starting from index 34
+         const targetReds = Math.floor((newPart.length - 34) / 6) + 1;
+         
+         if (redIdx < targetReds && redIdx < redInjectionPool.length) {
+            const p = redInjectionPool[redIdx++];
+            if (tryAdd(p)) {
+                 continue;
+            }
+         }
     }
 
     let added = false;
