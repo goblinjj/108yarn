@@ -157,12 +157,19 @@ export function generateCombinations() {
     [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
   }
 
+  // Identify independent Red pool for injection (sorted by score)
+  // We use filter to get a new array, but references to permutations are same
+  let redInjectionPool = candidates.filter(p => p.includes(RED) && scoreCombinationNew(p) > -500);
+  redInjectionPool.sort((a, b) => scoreCombinationNew(b) - scoreCombinationNew(a));
+
   // Categorize candidates to ensure balance
   const onlyWhite = [];
   const onlyYellow = [];
   const both = [];
 
   candidates.forEach(p => {
+    if (scoreCombinationNew(p) <= -500) return; // Filter invalid
+
     const hasW = p.includes(WHITE);
     const hasY = p.includes(YELLOW);
     if (hasW && hasY) both.push(p);
@@ -177,15 +184,34 @@ export function generateCombinations() {
 
   // Interleave to get balanced mix (approx 27 of each for the 81 slots)
   const newPart = [];
+  const usedSet = new Set();
   let i = 0;
+  let redIdx = 0;
+
+  const tryAdd = (p) => {
+      if (usedSet.has(p)) return false;
+      newPart.push(p);
+      usedSet.add(p);
+      return true;
+  };
+
   while (newPart.length < 81) {
+    // Inject Red occasionally in range 62-108 (indices 34-80)
+    // Every ~6th item
+    if (newPart.length >= 34 && (newPart.length - 34) % 6 === 0 && redIdx < redInjectionPool.length) {
+        const p = redInjectionPool[redIdx++];
+        if (tryAdd(p)) {
+            continue;
+        }
+    }
+
     let added = false;
     // Cycle through: Only White -> Only Yellow -> Both
-    if (i < onlyWhite.length) { newPart.push(onlyWhite[i]); added = true; }
-    if (newPart.length < 81 && i < onlyYellow.length) { newPart.push(onlyYellow[i]); added = true; }
-    if (newPart.length < 81 && i < both.length) { newPart.push(both[i]); added = true; }
+    if (i < onlyWhite.length) { if (tryAdd(onlyWhite[i])) added = true; }
+    if (newPart.length < 81 && i < onlyYellow.length) { if (tryAdd(onlyYellow[i])) added = true; }
+    if (newPart.length < 81 && i < both.length) { if (tryAdd(both[i])) added = true; }
     
-    if (!added) break; // Should not happen given the pool size
+    if (!added && i > candidates.length * 2) break; // End breakdown
     i++;
   }
 
