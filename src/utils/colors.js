@@ -141,16 +141,15 @@ export function generateCombinations() {
     if (hasGreen && hasYellow) score += 1;
     if (hasBlue && hasWhite) score += 1;
     
-    // Red handling: Allow soft red combinations, avoid high contrast
+    // Red handling: Significantly suppress red to keep it at lower proportion
     if (hasRed) {
-      // Penalize high contrast combinations with red
+      // Strong penalty for any red - red should be rare
+      score -= 1.5;
+      
+      // Additional penalties for specific red combinations
       if (hasRed && hasGreen) score -= 4;  // Complementary colors, too sharp
       if (hasRed && hasBlue) score -= 3.5; // High contrast
       if (hasBlue && hasRed && hasYellow) score -= 3; // Too vibrant
-      
-      // But allow softer red combinations with warm tones
-      if (hasRed && hasWhite && (hasBrown || hasDarkYellow)) score += 1; // Soft warm red
-      if (hasRed && hasBrown) score += 0.5; // Earthy red
     }
 
     return score;
