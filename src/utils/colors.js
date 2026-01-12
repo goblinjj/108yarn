@@ -116,7 +116,7 @@ export function generateCombinations() {
   // Candidates: All valid permutations (using basic adjacency rules) minus the ones already used
   const candidates = validPermutations.filter(p => !isUsed(p));
 
-  // New Scoring/Filtering Rules
+  // New Scoring/Filtering Rules (with red tones support)
   const scoreCombinationNew = (combo) => {
     let score = 0;
     const hasGreen = combo.includes(GREEN);
@@ -132,12 +132,7 @@ export function generateCombinations() {
         return -1000; // Discard
     }
 
-    // Rule 2: Not too large span / Not too eye-catching
-    if (hasRed) score -= 2; // Red is very eye-catching
-    if (hasRed && hasGreen) score -= 3;
-    if (hasRed && hasBlue) score -= 3;
-    
-    // Reward harmonious/soft combinations
+    // Base reward for white and yellow
     if (hasWhite) score += 2;
     if (hasYellow) score += 1;
     
@@ -146,7 +141,24 @@ export function generateCombinations() {
     if (hasGreen && hasYellow) score += 1;
     if (hasBlue && hasWhite) score += 1;
     
-    if (hasBlue && hasRed && hasYellow) score -= 2;
+    // Red tones: support soft, warm combinations (not high contrast)
+    if (hasRed) {
+      // Soft red combinations with warm neutrals - give these significant positive scores
+      if (hasWhite && hasBrown) score += 3.5;      // Warm, soft red+white+brown - HIGHLY PREFERRED
+      if (hasWhite && hasDarkYellow) score += 3;   // Soft red+white+amber - HIGHLY PREFERRED
+      if (hasBrown && hasDarkYellow && hasWhite) score += 3; // Red+brown+amber+white - HIGHLY PREFERRED
+      if (hasBrown && hasDarkYellow) score += 2.5; // Warm earthy red - PREFERRED
+      if (hasWhite && hasRed && hasYellow) score += 2.5; // Red+white+yellow - warm tones
+      if (hasWhite && hasRed) score += 2;         // Red with white base - soft
+      if (hasBrown && hasRed) score += 1.5;       // Red with brown
+      if (hasDarkYellow && hasRed) score += 1.5;  // Red with amber
+      if (hasYellow && hasRed) score += 1;        // Warm, not too sharp
+      
+      // Avoid high contrast (but less penalizing for soft combinations)
+      if (hasRed && hasGreen && !hasWhite && !hasBrown && !hasDarkYellow) score -= 5; // Only red+green, too sharp
+      if (hasRed && hasBlue && !hasWhite && !hasBrown && !hasDarkYellow) score -= 4;  // Only red+blue, high contrast
+      if (hasBlue && hasRed && hasGreen) score -= 4; // Too vibrant mix
+    }
 
     return score;
   };
